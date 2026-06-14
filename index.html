@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>演示文稿中心 · andyzhao2024</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0d1117; color: #c9d1d9; min-height: 100vh;
+  }
+  header {
+    background: linear-gradient(135deg, #161b22 0%, #1f2937 100%);
+    border-bottom: 1px solid #30363d;
+    padding: 32px 40px;
+  }
+  header h1 { font-size: 28px; color: #58a6ff; margin-bottom: 6px; }
+  header p { color: #8b949e; font-size: 14px; }
+  .container { max-width: 900px; margin: 40px auto; padding: 0 24px; }
+  .stats { display: flex; gap: 16px; margin-bottom: 32px; }
+  .stat-card {
+    background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+    padding: 16px 24px; flex: 1; text-align: center;
+  }
+  .stat-card .num { font-size: 32px; font-weight: bold; color: #58a6ff; }
+  .stat-card .label { font-size: 12px; color: #8b949e; margin-top: 4px; }
+  .card-grid { display: grid; gap: 16px; }
+  .card {
+    background: #161b22; border: 1px solid #30363d; border-radius: 12px;
+    padding: 24px; display: flex; justify-content: space-between;
+    align-items: center; transition: border-color .2s, transform .2s;
+  }
+  .card:hover { border-color: #58a6ff; transform: translateY(-2px); }
+  .card-info h2 { font-size: 18px; color: #e6edf3; margin-bottom: 6px; }
+  .card-info .date { font-size: 12px; color: #8b949e; }
+  .card-actions { display: flex; gap: 10px; flex-shrink: 0; margin-left: 20px; }
+  .btn {
+    padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+    transition: opacity .2s;
+  }
+  .btn:hover { opacity: .8; }
+  .btn-primary { background: #238636; color: #fff; border: 1px solid #2ea043; }
+  .btn-secondary { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; }
+  .empty {
+    text-align: center; padding: 80px 20px; color: #8b949e;
+    border: 2px dashed #30363d; border-radius: 12px;
+  }
+  .empty p { font-size: 16px; margin-top: 12px; }
+  footer {
+    text-align: center; color: #8b949e; font-size: 12px;
+    padding: 40px 20px; border-top: 1px solid #21262d; margin-top: 60px;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎯 演示文稿中心</h1>
+  <p>由 Hermes presentation-master 自动生成 · andyzhao2024</p>
+</header>
+<div class="container">
+  <div class="stats">
+    <div class="stat-card">
+      <div class="num">2</div>
+      <div class="label">演示文稿</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">∞</div>
+      <div class="label">可访问时长</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">AI</div>
+      <div class="label">DeepSeek 生成</div>
+    </div>
+  </div>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-info">
+        <h2>Joint</h2>
+        <div class="date">📅 —</div>
+      </div>
+      <div class="card-actions">
+        <a class="btn btn-primary" href="https://andyzhao2024.github.io/presentations/robot-joint/" target="_blank">▶ 查看幻灯片</a>
+        <a class="btn btn-secondary" href="https://andyzhao2024.github.io/presentations/robot-joint/slides.pptx" download>⬇ PPTX</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-info">
+        <h2>Aippt</h2>
+        <div class="date">📅 2026-06-15 05:13</div>
+      </div>
+      <div class="card-actions">
+        <a class="btn btn-primary" href="https://andyzhao2024.github.io/presentations/202606150513-aippt/" target="_blank">▶ 查看幻灯片</a>
+        <a class="btn btn-secondary" href="https://andyzhao2024.github.io/presentations/202606150513-aippt/slides.pptx" download>⬇ PPTX</a>
+      </div>
+    </div>
+  </div>
+</div>
+<footer>
+  Powered by Hermes + DeepSeek + GitHub Pages · 最后更新：2026-06-15 05:40
+</footer>
+</body>
+</html>
