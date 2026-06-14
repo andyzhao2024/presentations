@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机器人关节模组 — 一次讲透</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Segoe UI', Calibri, 'Microsoft YaHei', sans-serif; }
+body { background: #0A1628; color: #1A2332; }
+
+.slides { width: 100%; height: 100%; position: relative; }
+.slide { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.5s ease; pointer-events: none; }
+.slide.active { opacity: 1; pointer-events: auto; }
+
+.slide-inner { width: min(96vw, 1280px); aspect-ratio: 16/9; max-height: 92vh; position: relative; overflow: hidden; border-radius: 8px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+
+/* Slide 1 — Title */
+.s1 { background: #0A1628; }
+.s1 .rn { position: absolute; right: 0; top: 0; width: 35%; height: 100%; background: #0D2137; }
+.s1 .accent { position: absolute; left: 7%; top: 24%; width: 12%; height: 3px; background: #0066CC; }
+.s1 h1 { position: absolute; left: 7%; top: 26%; font-family: 'Arial Black', 'Microsoft YaHei', sans-serif; font-size: clamp(24px, 3.8vw, 48px); font-weight: 900; color: #FFFFFF; }
+.s1 .sub { position: absolute; left: 7%; top: 45%; font-size: clamp(12px, 1.5vw, 18px); color: #0066CC; }
+.s1 .src { position: absolute; left: 7%; bottom: 8%; font-size: 10px; color: #64748B; }
+.s1 .num { position: absolute; right: 4%; top: 18%; width: 25%; text-align: center; font-size: clamp(60px, 10vw, 120px); font-family: 'Arial Black', sans-serif; font-weight: 900; color: #0066CC; }
+.s1 .numsub { position: absolute; right: 4%; top: 58%; width: 25%; text-align: center; font-size: clamp(11px, 1.3vw, 16px); color: #FFFFFF; }
+
+/* Light slides */
+.s-light .slide-inner { background: #F4F6F9; }
+.s-light .tag { position: absolute; left: 7%; top: 3.5%; font-size: 12px; color: #0066CC; font-weight: 700; letter-spacing: 2px; }
+.s-light .bar { position: absolute; left: 7%; top: 9.5%; width: 0.6%; height: 1.2%; background: #0066CC; }
+.s-light h2 { position: absolute; left: 8.8%; top: 8.5%; font-family: 'Arial Black', 'Microsoft YaHei', sans-serif; font-size: clamp(18px, 2.6vw, 30px); font-weight: 900; color: #1A2332; }
+
+/* Cards */
+.card { position: absolute; background: #FFFFFF; border-radius: 4px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+.card .cbar { position: absolute; left: 0; top: 0; width: 3px; height: 100%; border-radius: 4px 0 0 4px; }
+.card .icon-circle { position: absolute; width: 13%; aspect-ratio: 1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: clamp(14px, 1.6vw, 20px); }
+.card .ctitle { position: absolute; font-size: clamp(13px, 1.4vw, 18px); font-weight: 700; color: #1A2332; }
+.card .clist { position: absolute; font-size: clamp(9px, 1vw, 13px); color: #1A2332; line-height: 1.7; }
+.card .clist li { margin-bottom: 3px; }
+.insight-bar { position: absolute; left: 7%; bottom: 11%; width: 86%; height: 2px; background: #E8ECF1; }
+.insight-txt { position: absolute; left: 7%; bottom: 5%; font-size: clamp(8px, 0.85vw, 11px); font-style: italic; color: #64748B; width: 86%; }
+
+/* Slide 2 cards */
+.s2 .card-l { left: 7%; top: 26%; width: 41%; height: 64%; }
+.s2 .card-l .cbar { background: #0066CC; }
+.s2 .card-l .icon-circle { left: 8%; top: 7%; background: #0066CC; }
+.s2 .card-l .ctitle { left: 28%; top: 7%; }
+.s2 .card-l .clist { left: 8%; top: 28%; width: 84%; }
+
+.s2 .card-r { left: 52%; top: 26%; width: 41%; height: 64%; }
+.s2 .card-r .cbar { background: #00A86B; }
+.s2 .card-r .icon-circle { left: 8%; top: 7%; background: #00A86B; }
+.s2 .card-r .ctitle { left: 28%; top: 7%; }
+.s2 .card-r .clist { left: 8%; top: 28%; width: 84%; }
+
+/* Slide 3 */
+.s3 .explain { position: absolute; left: 7%; top: 26%; width: 43%; font-size: clamp(10px, 1.1vw, 14px); color: #1A2332; line-height: 1.8; }
+.s3 .explain b { font-size: 110%; }
+.s3 .explain .muted { color: #64748B; font-style: italic; }
+.s3 .explain .accent { color: #0066CC; font-style: italic; }
+
+.s3 .fcards { position: absolute; right: 4%; top: 24%; width: 40%; height: 68%; display: flex; flex-direction: column; gap: 5%; }
+.s3 .fcard { flex: 1; background: #FFFFFF; border-radius: 4px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); position: relative; overflow: hidden; }
+.s3 .fcard .fcbar { position: absolute; left: 0; top: 0; width: 3px; height: 100%; background: #0066CC; }
+.s3 .fcard .fcicon { position: absolute; left: 6%; top: 50%; transform: translateY(-50%); font-size: clamp(14px, 1.5vw, 20px); }
+.s3 .fcard .fctitle { position: absolute; left: 18%; top: 15%; font-size: clamp(11px, 1.1vw, 14px); font-weight: 700; color: #1A2332; }
+.s3 .fcard .fcdesc { position: absolute; left: 18%; top: 45%; font-size: clamp(8px, 0.85vw, 11px); color: #64748B; width: 76%; }
+
+/* Slide 4 */
+.s4 .card-l { left: 7%; top: 22%; width: 41%; height: 72%; }
+.s4 .card-l .cbar { background: #0066CC; }
+.s4 .card-l .ctitle { left: 8%; top: 5%; font-size: clamp(14px, 1.6vw, 20px); }
+.s4 .card-l .cdesc { position: absolute; left: 8%; top: 16%; width: 86%; font-size: clamp(9px, 1vw, 12px); color: #64748B; }
+
+.s4 .subcard { position: absolute; left: 8%; width: 86%; height: 28%; background: #F4F6F9; border-radius: 3px; }
+.s4 .subcard .stitle { position: absolute; left: 5%; top: 8%; font-size: clamp(10px, 1.05vw, 13px); font-weight: 700; }
+.s4 .subcard .sdesc { position: absolute; left: 5%; top: 40%; width: 92%; font-size: clamp(8px, 0.82vw, 11px); color: #1A2332; line-height: 1.5; }
+
+.s4 .card-r { left: 52%; top: 22%; width: 41%; height: 72%; }
+.s4 .card-r .cbar { background: #E8590C; }
+.s4 .card-r .ctitle { left: 8%; top: 5%; font-size: clamp(13px, 1.5vw, 19px); }
+.s4 .card-r .cdesc { position: absolute; left: 8%; top: 16%; width: 86%; font-size: clamp(9px, 1vw, 12px); color: #64748B; }
+
+.s4 .scenario { position: absolute; left: 8%; width: 86%; height: 12%; display: flex; align-items: center; gap: 3%; }
+.s4 .scenario .sdot { width: 12%; aspect-ratio: 1; border-radius: 50%; background: #FFF3E0; display: flex; align-items: center; justify-content: center; font-size: clamp(10px, 1.1vw, 14px); flex-shrink: 0; }
+.s4 .scenario .stxt { font-size: clamp(9px, 0.9vw, 12px); color: #1A2332; }
+
+.s4 .brake-note { position: absolute; left: 8%; bottom: 6%; width: 86%; font-size: clamp(7px, 0.7vw, 10px); font-style: italic; color: #64748B; }
+
+/* Slide 5 — Dark summary */
+.s5 .slide-inner { background: #0A1628; }
+.s5 .tag-d { position: absolute; left: 7%; top: 3.5%; font-size: 12px; color: #0066CC; font-weight: 700; letter-spacing: 2px; }
+.s5 h2 { position: absolute; left: 7%; top: 9%; font-family: 'Arial Black', 'Microsoft YaHei', sans-serif; font-size: clamp(18px, 2.4vw, 30px); font-weight: 900; color: #FFFFFF; }
+
+.s5 .comp-row { position: absolute; left: 7%; top: 28%; width: 86%; height: 30%; display: flex; gap: 2%; }
+.s5 .c-card { flex: 1; background: #0D2137; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+.s5 .c-card .ctop { position: absolute; top: 0; left: 0; width: 100%; height: 3px; }
+.s5 .c-card .clabel { font-family: 'Arial Black', 'Microsoft YaHei', sans-serif; font-size: clamp(14px, 1.5vw, 20px); font-weight: 900; color: #FFFFFF; }
+.s5 .c-card .csub { font-size: clamp(8px, 0.8vw, 11px); color: #64748B; margin-top: 4%; }
+
+.s5 .sep { position: absolute; left: 7%; top: 62%; width: 86%; height: 1px; background: #2A3F5F; }
+.s5 .keymsg { position: absolute; left: 7%; top: 66%; width: 86%; font-size: clamp(11px, 1.2vw, 15px); font-style: italic; color: #FFFFFF; }
+.s5 .keytake { position: absolute; left: 7%; top: 76%; width: 86%; font-size: clamp(10px, 1.1vw, 14px); color: #0066CC; }
+.s5 .footer { position: absolute; left: 7%; bottom: 6%; font-size: 9px; color: #64748B; }
+
+/* Navigation */
+.nav { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; z-index: 100; background: rgba(10,22,40,0.85); backdrop-filter: blur(10px); padding: 8px 20px; border-radius: 30px; }
+.nav button { width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); background: transparent; color: #FFFFFF; font-size: 18px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+.nav button:hover { background: #0066CC; border-color: #0066CC; }
+.nav .dots { display: flex; gap: 8px; }
+.nav .dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.3); cursor: pointer; transition: all 0.3s; }
+.nav .dot.active { background: #0066CC; box-shadow: 0 0 12px rgba(0,102,204,0.5); }
+.nav .page-num { color: rgba(255,255,255,0.6); font-size: 12px; min-width: 50px; text-align: center; }
+
+@media (max-width: 768px) {
+  .nav button { width: 36px; height: 36px; font-size: 16px; }
+  .nav { gap: 8px; padding: 6px 14px; }
+}
+</style>
+</head>
+<body>
+
+<div class="slides" id="slides">
+  <!-- Slide 1: Title -->
+  <div class="slide s1 active"><div class="slide-inner">
+    <div class="rn"></div>
+    <div class="accent"></div>
+    <h1>机器人关节模组</h1>
+    <div class="sub">一次讲透：电机 · 减速器 · 驱动器 · 编码器 · 抱闸</div>
+    <div class="src">基于「机器人技术笔记」公众号文章整理</div>
+    <div class="num">5</div>
+    <div class="numsub">核心部件</div>
+  </div></div>
+
+  <!-- Slide 2: 电机 & 减速器 -->
+  <div class="slide s2 s-light"><div class="slide-inner">
+    <div class="tag">动力与变速</div>
+    <div class="bar"></div>
+    <h2>电机驱动，减速器放大</h2>
+    <div class="card card-l">
+      <div class="cbar"></div>
+      <div class="icon-circle">⚡</div>
+      <div class="ctitle">电机 — 动力来源</div>
+      <ul class="clist" style="list-style: none;">
+        <li>◆ 将电能转换为机械旋转动力</li>
+        <li>◆ 伺服电机 → 精确控制位置、速度、力矩</li>
+        <li>◆ 高速电机力矩不足，需配合减速器使用</li>
+        <li>◆ 决定关节的动力上限与动态响应能力</li>
+      </ul>
+    </div>
+    <div class="card card-r">
+      <div class="cbar"></div>
+      <div class="icon-circle">⚙</div>
+      <div class="ctitle">减速器 — 力矩放大</div>
+      <ul class="clist" style="list-style: none;">
+        <li>◆ 降速增矩：高速低扭 → 低速高扭</li>
+        <li>◆ 提升输出侧控制分辨率</li>
+        <li>◆ 常见类型：谐波、RV、行星减速器</li>
+        <li>◆ 带来摩擦、间隙、回差 → 控制更复杂</li>
+      </ul>
+    </div>
+    <div class="insight-bar"></div>
+    <div class="insight-txt">关键洞察：机器人关节设计从来不是「减速比越大越好」，要在输出能力和控制性能之间找到平衡。</div>
+  </div></div>
+
+  <!-- Slide 3: 驱动器 -->
+  <div class="slide s3 s-light"><div class="slide-inner">
+    <div class="tag">控制与执行</div>
+    <div class="bar"></div>
+    <h2>驱动器 — 连接「算法」与「硬件」的桥梁</h2>
+    <div class="explain">
+      <b>驱动器是让电机「按要求工作」的控制执行单元。</b><br><br>
+      电机本身不理解「转到30度」之类的指令，只能响应电流电压。驱动器将上层控制目标转化为电机能执行的电信号。<br><br>
+      <span class="muted">电机决定「能不能动」</span><br>
+      <span class="accent">驱动器决定「动得好不好」</span>
+    </div>
+    <div class="fcards">
+      <div class="fcard"><div class="fcbar"></div><div class="fcicon">🔌</div><div class="fctitle">功率驱动</div><div class="fcdesc">将外部供电转换为适合电机的电流电压形式，把电送到绕组</div></div>
+      <div class="fcard"><div class="fcbar"></div><div class="fcicon">🔄</div><div class="fctitle">闭环控制</div><div class="fcdesc">基于编码器反馈执行电流环/速度环/位置环，是最底层的控制环节</div></div>
+      <div class="fcard"><div class="fcbar"></div><div class="fcicon">🛡</div><div class="fctitle">保护与管理</div><div class="fcdesc">过流保护、过温保护、故障检测、通信接口管理</div></div>
+    </div>
+    <div class="insight-bar"></div>
+    <div class="insight-txt">好的驱动器不仅要带起电机，更要稳定、平顺、可靠地执行控制命令。</div>
+  </div></div>
+
+  <!-- Slide 4: 编码器 & 抱闸 -->
+  <div class="slide s4 s-light"><div class="slide-inner">
+    <div class="tag">感知与安全</div>
+    <div class="bar"></div>
+    <h2>反馈闭环 · 安全保障</h2>
+    <div class="card card-l">
+      <div class="cbar"></div>
+      <div class="ctitle">编码器</div>
+      <div class="cdesc">测量旋转位置，形成闭环控制。没有编码器，系统只能「盲转」。</div>
+      <div class="subcard" style="top: 26%;">
+        <div class="stitle" style="color:#0066CC;">电机编码器</div>
+        <div class="sdesc">测电机转子位置 → 服务于换相和高速伺服控制。驱动器需要高频、精细的状态信息做稳电流环/速度环。</div>
+      </div>
+      <div class="subcard" style="top: 58%;">
+        <div class="stitle" style="color:#00A86B;">输出端编码器</div>
+        <div class="sdesc">测关节实际输出位置 → 即使减速器有弹性变形和间隙，也能感知真实状态，实现更精确、更稳定的控制。</div>
+      </div>
+    </div>
+    <div class="card card-r">
+      <div class="cbar"></div>
+      <div class="ctitle">抱闸（电磁制动器）</div>
+      <div class="cdesc">让关节在断电时「刹住」，非运动部件，而是安全保障。</div>
+      <div class="scenario" style="top: 26%;"><div class="sdot">🔻</div><div class="stxt">断电后防止关节因重力下滑</div></div>
+      <div class="scenario" style="top: 42%;"><div class="sdot">⏸</div><div class="stxt">垂直轴或大负载轴停稳保持</div></div>
+      <div class="scenario" style="top: 58%;"><div class="sdot">⚠</div><div class="stxt">故障时安全锁住关节</div></div>
+      <div class="brake-note">⚠ 抱闸并非所有关节标配 — 轻量化/低风险场景下可能省略，属于「按需配置」的安全部件。</div>
+    </div>
+    <div class="insight-bar"></div>
+  </div></div>
+
+  <!-- Slide 5: 总结 -->
+  <div class="slide s5"><div class="slide-inner">
+    <div class="tag-d">总结</div>
+    <h2>机器人关节 = 高度集成的小型机电系统</h2>
+    <div class="comp-row">
+      <div class="c-card"><div class="ctop" style="background:#0066CC;"></div><div class="clabel">电机</div><div class="csub">动力来源</div></div>
+      <div class="c-card"><div class="ctop" style="background:#00A86B;"></div><div class="clabel">减速器</div><div class="csub">力矩放大</div></div>
+      <div class="c-card"><div class="ctop" style="background:#0099CC;"></div><div class="clabel">驱动器</div><div class="csub">控制执行</div></div>
+      <div class="c-card"><div class="ctop" style="background:#7C4DFF;"></div><div class="clabel">编码器</div><div class="csub">状态反馈</div></div>
+      <div class="c-card"><div class="ctop" style="background:#E8590C;"></div><div class="clabel">抱闸</div><div class="csub">安全保障</div></div>
+    </div>
+    <div class="sep"></div>
+    <div class="keymsg">表面上看大家都在做机器人关节，真正拉开差距的，是这些部件之间是否做到了高质量的系统集成。</div>
+    <div class="keytake">→ 体积 · 精度 · 控制 · 散热 · 可靠性 — 五维平衡才是壁垒</div>
+    <div class="footer">来源：机器人技术笔记 | 制作：Hermes Agent</div>
+  </div></div>
+</div>
+
+<nav class="nav">
+  <button onclick="prev()" aria-label="上一页">◀</button>
+  <div class="dots" id="dots"></div>
+  <span class="page-num" id="pagenum">1 / 5</span>
+  <button onclick="next()" aria-label="下一页">▶</button>
+</nav>
+
+<script>
+let current = 0;
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+
+function show(i) {
+  slides.forEach((s, idx) => { s.classList.toggle('active', idx === i); });
+  document.querySelectorAll('.dot').forEach((d, idx) => { d.classList.toggle('active', idx === i); });
+  document.getElementById('pagenum').textContent = (i + 1) + ' / ' + total;
+  current = i;
+}
+
+// Build dots
+const dotsContainer = document.getElementById('dots');
+for (let i = 0; i < total; i++) {
+  const dot = document.createElement('div');
+  dot.className = 'dot' + (i === 0 ? ' active' : '');
+  dot.onclick = () => show(i);
+  dotsContainer.appendChild(dot);
+}
+
+function next() { if (current < total - 1) show(current + 1); }
+function prev() { if (current > 0) show(current - 1); }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); next(); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); prev(); }
+});
+
+// Touch swipe support
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const diff = touchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 50) { diff > 0 ? next() : prev(); }
+});
+</script>
+</body>
+</html>
