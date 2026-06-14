@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AI辅助PPT演示系统</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reset.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/black.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/highlight/monokai.css"/>
+<style>
+  :root { --r-main-font-size: 32px; }
+  .reveal h1, .reveal h2 { color: #42affa; }
+  .reveal ul { text-align: left; }
+  .download-btn {
+    position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+    background: #42affa; color: #000; border: none;
+    padding: 10px 18px; border-radius: 8px; font-size: 14px;
+    cursor: pointer; font-weight: bold; text-decoration: none;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .download-btn:hover { background: #90d0ff; }
+</style>
+</head>
+<body>
+<div class="reveal">
+  <div class="slides">
+    <section>
+      <h2>AI 辅助PPT演示系统</h2>
+      <p>基于 Hermes + DeepSeek + GitHub Pages</p>
+<p><strong>presentation-master 机器人</strong></p>
+      <aside class="notes">这是封面页</aside>
+    </section>
+    <section>
+      <h2>系统架构</h2>
+      <ul>
+<li>飞书机器人接收需求</li>
+<li>DeepSeek 生成内容</li>
+<li>Reveal.js 渲染网页</li>
+<li>GitHub Pages 发布</li>
+</ul>
+      <aside class="notes">介绍整体架构</aside>
+    </section>
+    <section>
+      <h2>主要功能</h2>
+      <ul>
+<li>自动生成精美幻灯片</li>
+<li>一键发布为网页</li>
+<li>支持导出 PPTX</li>
+<li>分享链接即可查看</li>
+</ul>
+      <aside class="notes">核心功能介绍</aside>
+    </section>
+    <section>
+      <h2>谢谢</h2>
+      <p><strong>演示完毕</strong></p>
+<p>随时通过飞书向 presentation-master 发起对话</p>
+      <aside class="notes">结束页</aside>
+    </section>
+  </div>
+</div>
+<a class="download-btn" href="./slides.pptx" download>⬇ 下载 PPTX</a>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/highlight/highlight.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/markdown/markdown.js"></script>
+<script>
+Reveal.initialize({
+  hash: true,
+  transition: 'slide',
+  plugins: [RevealNotes, RevealHighlight, RevealMarkdown]
+});
+</script>
+</body>
+</html>
