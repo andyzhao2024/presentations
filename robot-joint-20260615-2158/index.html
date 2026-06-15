@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>机器人关节模组一次讲透</title>
+  <style>
+    :root {
+      --dark: #0A1628;
+      --light: #F4F6F9;
+      --blue: #0066CC;
+      --green: #00A86B;
+      --ink: #162033;
+      --muted: #617089;
+      --line: #D7DEE8;
+      --panel: #FFFFFF;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; min-height: 100%; background: #07101f; color: var(--ink); font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", Arial, sans-serif; overflow: hidden; }
+    body { display: grid; place-items: center; min-height: 100dvh; }
+    .deck { width: min(100vw, calc(100dvh * 16 / 9)); height: min(100dvh, calc(100vw * 9 / 16)); position: relative; background: var(--dark); box-shadow: 0 24px 90px rgba(0,0,0,.38); overflow: hidden; }
+    .slide { position: absolute; inset: 0; display: none; padding: 5.8% 6.2%; isolation: isolate; }
+    .slide.active { display: block; animation: enter .42s ease both; }
+    @keyframes enter { from { opacity: 0; transform: translateX(18px) scale(.995); } to { opacity: 1; transform: translateX(0) scale(1); } }
+    .dark { background: var(--dark); color: #fff; }
+    .light { background: var(--light); color: var(--ink); }
+    .kicker { margin: 0 0 1.2rem; font: 700 clamp(.55rem, .85vw, .8rem)/1 "Segoe UI", sans-serif; letter-spacing: .14em; color: var(--blue); }
+    .dark .kicker { color: #8FC7FF; }
+    h1, h2 { margin: 0; letter-spacing: 0; }
+    h1 { max-width: 63%; font-size: clamp(2rem, 5.2vw, 4.45rem); line-height: 1.08; }
+    h2 { font-size: clamp(1.45rem, 2.9vw, 2.65rem); line-height: 1.12; }
+    p { margin: 0; line-height: 1.65; }
+    .sub { margin-top: 1.1rem; max-width: 55%; color: #D3E5F8; font-size: clamp(.92rem, 1.5vw, 1.32rem); }
+    .light .sub { color: var(--muted); }
+    .page-no { position: absolute; right: 6.1%; bottom: 5.4%; font: 700 .78rem/1 "Segoe UI", sans-serif; color: #7FA8D6; }
+    .light .page-no { color: var(--muted); }
+    .progress { position: absolute; left: 6.1%; right: 6.1%; bottom: 3.6%; height: 2px; background: rgba(127,168,214,.24); }
+    .progress span { display: block; height: 100%; width: calc(var(--i) * 20%); background: var(--green); transition: width .3s ease; }
+    .orbit { position: absolute; right: 9%; top: 9%; width: 34%; aspect-ratio: 1; border: 2px solid rgba(0,102,204,.48); border-radius: 50%; }
+    .orbit::before { content: ""; position: absolute; inset: 17%; border: 2px solid rgba(0,168,107,.58); border-radius: 50%; }
+    .orbit::after { content: ""; position: absolute; left: 41%; top: 41%; width: 18%; height: 18%; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 1.5rem rgba(0,102,204,.22); }
+    .chips { display: flex; gap: .72rem; margin-top: 2.15rem; flex-wrap: wrap; }
+    .chips span { border: 1px solid rgba(143,199,255,.38); background: #132A48; padding: .55rem .8rem; border-radius: .5rem; font-weight: 700; font-size: clamp(.72rem, 1vw, .92rem); }
+    .five { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.35%; margin-top: 8.8%; }
+    .part { min-height: 44vh; background: #fff; border: 1px solid #E1E7EF; border-radius: 8px; padding: 13% 9%; display: grid; grid-template-rows: auto auto auto 1fr; box-shadow: 0 13px 36px rgba(25,43,71,.08); }
+    .num { width: 3.25rem; height: 3.25rem; border-radius: 50%; display: grid; place-items: center; background: #E8F2FF; color: var(--blue); border: 1px solid #BFD9F7; font: 800 .8rem/1 "Segoe UI", sans-serif; }
+    .part:nth-child(5) .num { background: #E8F8F1; color: var(--green); border-color: #BFEEDC; }
+    .part h3 { margin: 1.2rem 0 .55rem; font-size: clamp(1rem, 1.5vw, 1.38rem); }
+    .part strong { color: var(--blue); font-size: clamp(.72rem, 1vw, .9rem); }
+    .part:nth-child(5) strong { color: var(--green); }
+    .part p { margin-top: .62rem; color: var(--muted); font-size: clamp(.68rem, .95vw, .86rem); }
+    .flow { display: grid; grid-template-columns: 1fr .62fr 1fr; align-items: center; gap: 3%; margin-top: 6.7%; }
+    .power-card { min-height: 47vh; background: #fff; border: 1px solid #E0E7F0; border-radius: 8px; padding: 9%; box-shadow: 0 13px 36px rgba(25,43,71,.08); }
+    .power-card h3 { margin: 0 0 1.3rem; font-size: clamp(1.2rem, 2vw, 1.8rem); }
+    .power-card .big { color: var(--blue); font-weight: 800; font-size: clamp(1.5rem, 3vw, 2.5rem); line-height: 1; }
+    .power-card:last-child .big { color: var(--green); }
+    .arrow { height: 3px; background: var(--green); position: relative; }
+    .arrow::after { content: ""; position: absolute; right: -.1rem; top: -.42rem; border-left: .9rem solid var(--green); border-top: .46rem solid transparent; border-bottom: .46rem solid transparent; }
+    .arrow-label { text-align: center; color: var(--green); font-weight: 800; margin-bottom: .7rem; }
+    .tags { position: absolute; left: 14%; right: 14%; bottom: 11.8%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .tags span { background: #E8F2FF; border: 1px solid #BCD8F8; color: var(--blue); border-radius: 6px; padding: .58rem; text-align: center; font-weight: 800; font-size: clamp(.68rem, .95vw, .84rem); }
+    .loop { display: grid; grid-template-columns: .9fr 1.05fr .9fr; gap: 4%; margin-top: 6.3%; align-items: center; }
+    .list-card { background: #fff; border: 1px solid #E0E7F0; border-radius: 8px; min-height: 47vh; padding: 10%; box-shadow: 0 13px 36px rgba(25,43,71,.08); }
+    .list-card h3 { margin: 0 0 1.35rem; font-size: clamp(1.15rem, 2vw, 1.65rem); }
+    .list-card ul { margin: 0; padding: 0; list-style: none; display: grid; gap: .62rem; color: var(--ink); font-size: clamp(.7rem, 1vw, .9rem); }
+    .list-card li { display: grid; grid-template-columns: .55rem 1fr; gap: .55rem; align-items: start; }
+    .list-card li::before { content: ""; width: .38rem; height: .38rem; border-radius: 50%; background: var(--blue); margin-top: .45rem; }
+    .list-card:last-child li::before { background: var(--green); }
+    .control-core { min-height: 37vh; background: var(--dark); color: #fff; border-radius: 8px; padding: 12%; display: grid; place-items: center; text-align: center; box-shadow: 0 18px 48px rgba(10,22,40,.2); }
+    .dots { display: flex; justify-content: center; gap: .55rem; margin-top: 1.2rem; }
+    .dots span { width: 2.45rem; height: 2.45rem; border-radius: 50%; display: grid; place-items: center; background: var(--blue); font-size: .72rem; font-weight: 800; }
+    .dots span:last-child { background: var(--green); }
+    .routes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.7%; margin-top: 6%; }
+    .route { min-height: 30vh; background: #101F36; border: 1px solid #244464; border-radius: 8px; padding: 11%; box-shadow: 0 18px 52px rgba(0,0,0,.24); }
+    .route:nth-child(3) { border-color: var(--green); }
+    .route h3 { margin: 0 0 1rem; font-size: clamp(1.15rem, 2vw, 1.75rem); }
+    .route p { color: #B9D9FB; font-size: clamp(.72rem, 1vw, .92rem); }
+    .route strong { display: block; margin-top: 1.1rem; color: var(--blue); }
+    .route:nth-child(3) strong, .route:nth-child(3) p { color: #9BEBCB; }
+    .trend { position: absolute; left: 6.2%; right: 6.2%; bottom: 12%; border-top: 1px solid #28496D; padding-top: 1.1rem; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+    .trend span { color: #DCEBFA; font-weight: 800; font-size: clamp(.7rem, 1vw, .9rem); }
+    .takeaway { position: absolute; left: 6.2%; right: 6.2%; bottom: 5.7%; color: #EAF4FF; font-size: clamp(.85rem, 1.35vw, 1.18rem); }
+    .controls { position: fixed; right: 1rem; bottom: 1rem; display: flex; gap: .5rem; z-index: 10; }
+    button { appearance: none; border: 1px solid rgba(255,255,255,.28); background: rgba(10,22,40,.74); color: #fff; min-width: 2.5rem; height: 2.5rem; border-radius: 999px; cursor: pointer; font-size: 1rem; }
+    button:active { transform: translateY(1px); }
+    @media (max-aspect-ratio: 1/1) {
+      .deck { width: 100vw; height: calc(100vw * 9 / 16); }
+      body { align-content: center; }
+      .controls { right: .6rem; bottom: .6rem; }
+      button { min-width: 2.25rem; height: 2.25rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck" id="deck" aria-live="polite">
+    <section class="slide dark active" aria-label="封面">
+      <div class="orbit"></div>
+      <p class="kicker">ROBOT JOINT MODULE</p>
+      <h1>机器人关节模组一次讲透</h1>
+      <p class="sub">从机电系统视角，拆解机器人关节的构成与设计逻辑</p>
+      <div class="chips"><span>电机</span><span>减速器</span><span>驱动器</span><span>编码器</span><span>抱闸</span></div>
+      <div class="page-no">01</div><div class="progress"><span style="--i:1"></span></div>
+    </section>
+    <section class="slide light" aria-label="关节的核心构成">
+      <p class="kicker">CORE ARCHITECTURE</p>
+      <h2>关节的核心构成</h2>
+      <p class="sub">五大部件共同决定关节的力矩密度、精度、响应与安全边界</p>
+      <div class="five">
+        <article class="part"><div class="num">01</div><h3>电机</h3><strong>电能到机械能</strong><p>提供原始动力与响应上限</p></article>
+        <article class="part"><div class="num">02</div><h3>减速器</h3><strong>降速增扭</strong><p>决定输出力矩、刚度与背隙</p></article>
+        <article class="part"><div class="num">03</div><h3>驱动器</h3><strong>算法到电信号</strong><p>执行电流、速度、位置闭环</p></article>
+        <article class="part"><div class="num">04</div><h3>编码器</h3><strong>位置反馈</strong><p>让控制从开环进入闭环</p></article>
+        <article class="part"><div class="num">05</div><h3>抱闸</h3><strong>断电保持</strong><p>安全制动和姿态保持</p></article>
+      </div>
+      <div class="page-no">02</div><div class="progress"><span style="--i:2"></span></div>
+    </section>
+    <section class="slide light" aria-label="电机加减速器">
+      <p class="kicker">POWER TRAIN</p>
+      <h2>电机 + 减速器：动力心脏</h2>
+      <p class="sub">电机提供高速小力矩，减速器把它转化为关节真正需要的低速大力矩</p>
+      <div class="flow">
+        <article class="power-card"><h3>电机侧</h3><div class="big">高速小力矩</div><p style="margin-top:1.2rem;color:var(--muted)">优势是响应快、效率高；短板是直接输出不足以承担关节负载。</p></article>
+        <div><div class="arrow-label">减速增扭</div><div class="arrow"></div></div>
+        <article class="power-card"><h3>输出侧</h3><div class="big">低速大力矩</div><p style="margin-top:1.2rem;color:var(--muted)">控制性不是免费获得的：摩擦、背隙、弹性会被一起带进系统模型。</p></article>
+      </div>
+      <div class="tags"><span>谐波 高精度、紧凑</span><span>RV 高刚度、耐冲击</span><span>行星 低减速比、高效率</span></div>
+      <div class="page-no">03</div><div class="progress"><span style="--i:3"></span></div>
+    </section>
+    <section class="slide light" aria-label="驱动器加编码器">
+      <p class="kicker">CLOSED LOOP</p>
+      <h2>驱动器 + 编码器：精准闭环</h2>
+      <p class="sub">驱动器把控制算法落到电流，编码器把真实运动带回控制器</p>
+      <div class="loop">
+        <article class="list-card"><h3>驱动器</h3><ul><li>功率驱动</li><li>电流环</li><li>速度环</li><li>位置环</li><li>过流/过温保护</li><li>故障检测</li></ul></article>
+        <div class="control-core"><div><h3>闭环控制链路</h3><div class="dots"><span>指令</span><span>驱动</span><span>运动</span><span>反馈</span></div></div></div>
+        <article class="list-card"><h3>双编码器</h3><ul><li>电机端编码器：服务高频伺服控制</li><li>输出端编码器：补偿减速器弹性变形</li></ul></article>
+      </div>
+      <div class="page-no">04</div><div class="progress"><span style="--i:4"></span></div>
+    </section>
+    <section class="slide dark" aria-label="三大技术路线与趋势">
+      <p class="kicker">TECH ROUTES</p>
+      <h2>三大技术路线与趋势</h2>
+      <div class="routes">
+        <article class="route"><h3>刚性关节</h3><p>谐波减速器</p><strong>精度优先</strong></article>
+        <article class="route"><h3>弹性关节</h3><p>谐波 + 弹性元件</p><strong>精度与安全折中</strong></article>
+        <article class="route"><h3>准直驱关节</h3><p>低减速比行星 + 高性能电机</p><strong>力控优先</strong></article>
+      </div>
+      <div class="trend"><span>局部控制</span><span>自诊断</span><span>安全保护</span><span>标准化降本</span></div>
+      <p class="takeaway">减速器从“核心放大器”变成系统的一部分，关节模组继续向智能节点演进。</p>
+      <div class="page-no">05</div><div class="progress"><span style="--i:5"></span></div>
+    </section>
+  </main>
+  <nav class="controls" aria-label="翻页控制">
+    <button type="button" id="prev" aria-label="上一页">‹</button>
+    <button type="button" id="next" aria-label="下一页">›</button>
+  </nav>
+  <script>
+    const slides = Array.from(document.querySelectorAll(".slide"));
+    let current = 0;
+    function show(index) {
+      current = Math.max(0, Math.min(slides.length - 1, index));
+      slides.forEach((slide, i) => slide.classList.toggle("active", i === current));
+      document.title = slides[current].getAttribute("aria-label") + " | 机器人关节模组一次讲透";
+    }
+    function next() { show(current + 1); }
+    function prev() { show(current - 1); }
+    document.getElementById("next").addEventListener("click", next);
+    document.getElementById("prev").addEventListener("click", prev);
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowRight" || event.key === "PageDown" || event.key === " ") next();
+      if (event.key === "ArrowLeft" || event.key === "PageUp") prev();
+    });
+    let startX = 0;
+    let startY = 0;
+    const deck = document.getElementById("deck");
+    deck.addEventListener("touchstart", (event) => {
+      const touch = event.changedTouches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+    }, { passive: true });
+    deck.addEventListener("touchend", (event) => {
+      const touch = event.changedTouches[0];
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
+      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
+        dx < 0 ? next() : prev();
+      }
+    }, { passive: true });
+  </script>
+</body>
+</html>
