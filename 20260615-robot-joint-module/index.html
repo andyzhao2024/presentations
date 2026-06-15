@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>机器人关节模组</title>
+  <style>
+    :root {
+      --bg: #0f1720;
+      --panel: #f4f7f9;
+      --ink: #101820;
+      --muted: #5b6973;
+      --line: rgba(255,255,255,0.14);
+      --light-line: #dbe3e8;
+      --accent: #ff6b35;
+      --shadow: 0 18px 40px rgba(10, 18, 28, 0.18);
+      --radius: 24px;
+      --deck-width: min(92vw, 1440px);
+      --font-display: "Microsoft YaHei", "Segoe UI", sans-serif;
+      --font-ui: "Aptos", "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top left, rgba(255,107,53,0.24), transparent 28%),
+        radial-gradient(circle at 80% 25%, rgba(37,167,184,0.18), transparent 22%),
+        linear-gradient(135deg, #091017 0%, #111c27 58%, #16212d 100%);
+      color: #fff;
+      font-family: var(--font-ui);
+    }
+    .deck {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .slides {
+      position: relative;
+      width: var(--deck-width);
+      aspect-ratio: 16 / 9;
+    }
+    .slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transform: translateX(50px) scale(0.98);
+      transition: opacity 280ms ease, transform 360ms ease;
+      pointer-events: none;
+    }
+    .slide.is-active {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+      pointer-events: auto;
+    }
+    .slide-shell {
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 26px 70px rgba(0,0,0,0.28);
+      backdrop-filter: blur(18px);
+    }
+    .left-panel {
+      padding: 42px 42px 36px;
+      background: linear-gradient(180deg, rgba(7,16,24,0.92), rgba(12,22,31,0.88));
+      position: relative;
+    }
+    .left-panel::after {
+      content: "";
+      position: absolute;
+      left: 42px;
+      right: 42px;
+      bottom: 24px;
+      height: 1px;
+      background: var(--line);
+    }
+    .right-panel {
+      padding: 34px 32px;
+      background: linear-gradient(180deg, #f7fafb 0%, #eef4f7 100%);
+      color: var(--ink);
+      display: grid;
+      grid-template-rows: 1fr auto;
+      gap: 24px;
+    }
+    .eyebrow {
+      display: inline-flex;
+      margin-bottom: 18px;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    h1 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(36px, 4vw, 62px);
+      line-height: 0.96;
+      letter-spacing: -0.04em;
+    }
+    h1 span {
+      display: block;
+      margin-top: 12px;
+      font-size: clamp(18px, 1.5vw, 24px);
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      color: rgba(255,255,255,0.72);
+      font-weight: 500;
+    }
+    .lead {
+      margin: 22px 0 0;
+      max-width: 28em;
+      font-size: 17px;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.8);
+    }
+    .points {
+      list-style: none;
+      padding: 0;
+      margin: 28px 0 0;
+      display: grid;
+      gap: 16px;
+    }
+    .point {
+      display: grid;
+      grid-template-columns: 10px 1fr;
+      gap: 14px;
+      align-items: start;
+      color: rgba(255,255,255,0.9);
+      font-size: 15px;
+      line-height: 1.65;
+    }
+    .point-bar {
+      width: 10px;
+      height: 44px;
+      border-radius: 999px;
+      margin-top: 2px;
+      box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent);
+    }
+    .tradeoff {
+      margin-top: 22px;
+      padding: 18px 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.03);
+    }
+    .tradeoff-label {
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .tradeoff-copy {
+      color: rgba(255,255,255,0.88);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+    .orbital {
+      --accent: #ff6b35;
+      position: relative;
+      align-self: center;
+      justify-self: center;
+      width: min(24vw, 300px);
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+    }
+    .orbital-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 22px solid color-mix(in srgb, var(--accent) 72%, white);
+      border-right-color: transparent;
+      transform: rotate(24deg);
+      filter: drop-shadow(0 16px 32px rgba(34, 49, 63, 0.18));
+    }
+    .orbital-core {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 14px 28px color-mix(in srgb, var(--accent) 36%, transparent);
+    }
+    .orbital-label {
+      position: absolute;
+      bottom: 22px;
+      font-family: var(--font-display);
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+    }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+    .stat-card {
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid var(--light-line);
+      background: rgba(255,255,255,0.72);
+      box-shadow: var(--shadow);
+      min-height: 100px;
+    }
+    .stat-card.wide { grid-column: 1 / -1; }
+    .stat-card span {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .stat-card strong {
+      display: block;
+      font-size: 20px;
+      line-height: 1.3;
+      font-family: var(--font-display);
+    }
+    .controls {
+      position: fixed;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(12px);
+    }
+    .dot-list {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255,255,255,0.32);
+      padding: 0;
+      cursor: pointer;
+      transition: transform 180ms ease, background 180ms ease;
+    }
+    .dot.active {
+      transform: scale(1.2);
+      background: #ff6b35;
+    }
+    .counter {
+      min-width: 62px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.84);
+    }
+    .hint {
+      font-size: 12px;
+      color: rgba(255,255,255,0.58);
+      letter-spacing: 0.06em;
+    }
+    @media (max-width: 980px) {
+      .deck { padding: 12px; }
+      .slides { width: 100%; }
+      .slide-shell {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1.2fr 1fr;
+      }
+      .left-panel, .right-panel { padding: 24px; }
+      .orbital { width: min(44vw, 220px); }
+      .stat-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck">
+    <div class="slides">
+      
+      <section class="slide is-active" data-index="0">
+        <div class="slide-shell">
+          <div class="left-panel">
+            <div class="eyebrow">ROBOT JOINT MODULE / 01</div>
+            <h1>电机<span>动力来源</span></h1>
+            <p class="lead">负责把电能转换成机械能，决定动力上限与动态能力。</p>
+            <ul class="points"><li class="point"><span class="point-bar" style="background:#ff6b35;"></span><span>电机负责提供最原始的旋转动力，没有电机，关节无法主动运动。</span></li><li class="point"><span class="point-bar" style="background:#ff6b35;"></span><span>机器人常用伺服电机，因为不仅要能转，还要能精确控制位置、速度与输出力矩。</span></li><li class="point"><span class="point-bar" style="background:#ff6b35;"></span><span>高速电机可以做得更小，但直接驱动时往往力矩不够；低速大力矩电机则通常更重、更贵。</span></li><li class="point"><span class="point-bar" style="background:#ff6b35;"></span><span>系统层面上，电机特性决定关节能否快速响应、频繁启停，并在高带宽控制下保持稳定。 </span></li></ul>
+            <div class="tradeoff">
+              <div class="tradeoff-label">工程判断</div>
+              <div class="tradeoff-copy">小型化、高响应与足够力矩之间存在天然张力，因此电机通常与减速器协同设计。</div>
+            </div>
+          </div>
+          <div class="right-panel">
+            <div class="orbital" style="--accent:#ff6b35;">
+              <div class="orbital-ring"></div>
+              <div class="orbital-core"></div>
+              <div class="orbital-label">电机</div>
+            </div>
+            <div class="stat-grid">
+              <div class="stat-card">
+                <span>系统定位</span>
+                <strong>动力来源</strong>
+              </div>
+              <div class="stat-card">
+                <span>集成特征</span>
+                <strong>高密度协同</strong>
+              </div>
+              <div class="stat-card wide">
+                <span>来源</span>
+                <strong>公众号原文提炼，聚焦电机 / 减速器 / 驱动器 / 编码器 / 抱闸</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    
+      <section class="slide " data-index="1">
+        <div class="slide-shell">
+          <div class="left-panel">
+            <div class="eyebrow">ROBOT JOINT MODULE / 02</div>
+            <h1>减速器<span>力矩整形</span></h1>
+            <p class="lead">把高速小力矩变成更适合机器人的低速大力矩输出。</p>
+            <ul class="points"><li class="point"><span class="point-bar" style="background:#f2a65a;"></span><span>减速器的第一作用是降速增矩，让输出轴转得更慢，但能带动更重的负载。</span></li><li class="point"><span class="point-bar" style="background:#f2a65a;"></span><span>减速器的第二作用是提升输出侧控制分辨率，让电机端小角度变化在输出端更可控。</span></li><li class="point"><span class="point-bar" style="background:#f2a65a;"></span><span>常见类型包括谐波、RV、行星减速器；其中谐波减速器常用于轻量化、紧凑集成的关节。</span></li><li class="point"><span class="point-bar" style="background:#f2a65a;"></span><span>减速器同时会引入摩擦、回差、间隙、柔顺性和效率损失，使控制问题更复杂。 </span></li></ul>
+            <div class="tradeoff">
+              <div class="tradeoff-label">工程判断</div>
+              <div class="tradeoff-copy">减速比不是越大越好，必须在输出能力与控制性能之间取平衡。</div>
+            </div>
+          </div>
+          <div class="right-panel">
+            <div class="orbital" style="--accent:#f2a65a;">
+              <div class="orbital-ring"></div>
+              <div class="orbital-core"></div>
+              <div class="orbital-label">减速器</div>
+            </div>
+            <div class="stat-grid">
+              <div class="stat-card">
+                <span>系统定位</span>
+                <strong>力矩整形</strong>
+              </div>
+              <div class="stat-card">
+                <span>集成特征</span>
+                <strong>高密度协同</strong>
+              </div>
+              <div class="stat-card wide">
+                <span>来源</span>
+                <strong>公众号原文提炼，聚焦电机 / 减速器 / 驱动器 / 编码器 / 抱闸</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    
+      <section class="slide " data-index="2">
+        <div class="slide-shell">
+          <div class="left-panel">
+            <div class="eyebrow">ROBOT JOINT MODULE / 03</div>
+            <h1>驱动器<span>控制执行</span></h1>
+            <p class="lead">把上层控制目标变成电机可执行的电信号，是算法与硬件之间的桥梁。</p>
+            <ul class="points"><li class="point"><span class="point-bar" style="background:#25a7b8;"></span><span>电机无法直接理解“转到 30 度”或“保持某个速度”，驱动器负责把目标转换成电流与电压控制。</span></li><li class="point"><span class="point-bar" style="background:#25a7b8;"></span><span>驱动器承担功率驱动任务，把外部供电转换成适合电机工作的形式。</span></li><li class="point"><span class="point-bar" style="background:#25a7b8;"></span><span>驱动器承担闭环控制任务，基于编码器反馈实现电流环、速度环和位置环。</span></li><li class="point"><span class="point-bar" style="background:#25a7b8;"></span><span>驱动器通常还集成过流、过温、故障检测和通信接口管理等保护能力。</span></li></ul>
+            <div class="tradeoff">
+              <div class="tradeoff-label">工程判断</div>
+              <div class="tradeoff-copy">如果电机决定“能不能动”，驱动器决定的就是“动得好不好”。</div>
+            </div>
+          </div>
+          <div class="right-panel">
+            <div class="orbital" style="--accent:#25a7b8;">
+              <div class="orbital-ring"></div>
+              <div class="orbital-core"></div>
+              <div class="orbital-label">驱动器</div>
+            </div>
+            <div class="stat-grid">
+              <div class="stat-card">
+                <span>系统定位</span>
+                <strong>控制执行</strong>
+              </div>
+              <div class="stat-card">
+                <span>集成特征</span>
+                <strong>高密度协同</strong>
+              </div>
+              <div class="stat-card wide">
+                <span>来源</span>
+                <strong>公众号原文提炼，聚焦电机 / 减速器 / 驱动器 / 编码器 / 抱闸</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    
+      <section class="slide " data-index="3">
+        <div class="slide-shell">
+          <div class="left-panel">
+            <div class="eyebrow">ROBOT JOINT MODULE / 04</div>
+            <h1>编码器<span>状态反馈</span></h1>
+            <p class="lead">让关节知道自己转到哪、转得多快，从而形成闭环控制。</p>
+            <ul class="points"><li class="point"><span class="point-bar" style="background:#5571f2;"></span><span>编码器负责测量旋转位置，并可进一步估计速度与方向；没有它，系统只能“盲转”。</span></li><li class="point"><span class="point-bar" style="background:#5571f2;"></span><span>电机侧编码器主要服务于换相与伺服控制，帮助驱动器高频、精细地掌握电机状态。</span></li><li class="point"><span class="point-bar" style="background:#5571f2;"></span><span>输出侧编码器更接近关节实际输出，可直接感知减速器后的真实状态。</span></li><li class="point"><span class="point-bar" style="background:#5571f2;"></span><span>高性能关节通常不只依赖电机侧测量，因为减速器并不是理想刚体。</span></li></ul>
+            <div class="tradeoff">
+              <div class="tradeoff-label">工程判断</div>
+              <div class="tradeoff-copy">一个关注电机本身怎么转，另一个关注关节最终转到了哪里，两者组合提升精度与稳定性。</div>
+            </div>
+          </div>
+          <div class="right-panel">
+            <div class="orbital" style="--accent:#5571f2;">
+              <div class="orbital-ring"></div>
+              <div class="orbital-core"></div>
+              <div class="orbital-label">编码器</div>
+            </div>
+            <div class="stat-grid">
+              <div class="stat-card">
+                <span>系统定位</span>
+                <strong>状态反馈</strong>
+              </div>
+              <div class="stat-card">
+                <span>集成特征</span>
+                <strong>高密度协同</strong>
+              </div>
+              <div class="stat-card wide">
+                <span>来源</span>
+                <strong>公众号原文提炼，聚焦电机 / 减速器 / 驱动器 / 编码器 / 抱闸</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    
+      <section class="slide " data-index="4">
+        <div class="slide-shell">
+          <div class="left-panel">
+            <div class="eyebrow">ROBOT JOINT MODULE / 05</div>
+            <h1>抱闸<span>安全保持</span></h1>
+            <p class="lead">在断电、故障或抗重力场景下，让关节安全刹住并保持姿态。</p>
+            <ul class="points"><li class="point"><span class="point-bar" style="background:#d9485f;"></span><span>抱闸通常是电磁制动器，主要用途不是驱动运动，而是让关节在特定情况下保持不动。</span></li><li class="point"><span class="point-bar" style="background:#d9485f;"></span><span>典型场景包括断电防止因重力下滑、垂直轴停稳保持，以及故障时安全锁止。</span></li><li class="point"><span class="point-bar" style="background:#d9485f;"></span><span>肩关节、肘关节等长期抗重力姿态保持的轴常配置抱闸，以降低设备与安全风险。</span></li><li class="point"><span class="point-bar" style="background:#d9485f;"></span><span>并非所有关节都必须集成抱闸，轻量化、小型化和低风险关节可能为了节省空间而省略。</span></li></ul>
+            <div class="tradeoff">
+              <div class="tradeoff-label">工程判断</div>
+              <div class="tradeoff-copy">抱闸更像按需配置的安全部件，而不是每个关节的绝对标配。</div>
+            </div>
+          </div>
+          <div class="right-panel">
+            <div class="orbital" style="--accent:#d9485f;">
+              <div class="orbital-ring"></div>
+              <div class="orbital-core"></div>
+              <div class="orbital-label">抱闸</div>
+            </div>
+            <div class="stat-grid">
+              <div class="stat-card">
+                <span>系统定位</span>
+                <strong>安全保持</strong>
+              </div>
+              <div class="stat-card">
+                <span>集成特征</span>
+                <strong>高密度协同</strong>
+              </div>
+              <div class="stat-card wide">
+                <span>来源</span>
+                <strong>公众号原文提炼，聚焦电机 / 减速器 / 驱动器 / 编码器 / 抱闸</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    
+    </div>
+  </main>
+  <div class="controls">
+    <div class="dot-list">
+      <button class="dot active" data-go="0" aria-label="跳转到 电机"></button><button class="dot " data-go="1" aria-label="跳转到 减速器"></button><button class="dot " data-go="2" aria-label="跳转到 驱动器"></button><button class="dot " data-go="3" aria-label="跳转到 编码器"></button><button class="dot " data-go="4" aria-label="跳转到 抱闸"></button>
+    </div>
+    <div class="counter"><span id="current">01</span> / <span id="total">05</span></div>
+    <div class="hint">Arrow keys / Swipe</div>
+  </div>
+  <script>
+    const slides = Array.from(document.querySelectorAll(".slide"));
+    const dots = Array.from(document.querySelectorAll(".dot"));
+    const current = document.getElementById("current");
+    let index = 0;
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    const render = () => {
+      slides.forEach((slide, i) => slide.classList.toggle("is-active", i === index));
+      dots.forEach((dot, i) => dot.classList.toggle("active", i === index));
+      current.textContent = String(index + 1).padStart(2, "0");
+      const active = slides[index];
+      const accent = ["#ff6b35","#f2a65a","#25a7b8","#5571f2","#d9485f"][index];
+      document.documentElement.style.setProperty("--accent", accent);
+      active.querySelectorAll(".point-bar").forEach((bar) => {
+        bar.style.background = accent;
+      });
+    };
+
+    const goTo = (next) => {
+      const total = slides.length;
+      index = (next + total) % total;
+      render();
+    };
+
+    const next = () => goTo(index + 1);
+    const prev = () => goTo(index - 1);
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowRight" || event.key === "PageDown") next();
+      if (event.key === "ArrowLeft" || event.key === "PageUp") prev();
+    });
+
+    dots.forEach((dot) => {
+      dot.addEventListener("click", () => goTo(Number(dot.dataset.go)));
+    });
+
+    window.addEventListener("touchstart", (event) => {
+      touchStartX = event.changedTouches[0].screenX;
+    }, { passive: true });
+
+    window.addEventListener("touchend", (event) => {
+      touchEndX = event.changedTouches[0].screenX;
+      if (Math.abs(touchEndX - touchStartX) < 40) return;
+      if (touchEndX < touchStartX) next();
+      if (touchEndX > touchStartX) prev();
+    }, { passive: true });
+
+    render();
+  </script>
+</body>
+</html>
