@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>机器人关节模组一次讲透</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reset.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', -apple-system, sans-serif; }
+  .reveal { font-size: 30px; }
+  .reveal .slides { text-align: left; }
+
+  /* ── 深色封面/总结页 ── */
+  .slide-cover, .slide-summary {
+    background: #0A1628;
+    color: #E2E8F0;
+  }
+  .slide-cover .slide-inner,
+  .slide-summary .slide-inner {
+    display: flex; flex-direction: column; justify-content: center;
+    height: 100%; padding: 60px 80px;
+  }
+  .slide-cover .slide-title {
+    font-size: 52px; font-weight: 700; color: #FFFFFF;
+    margin: 0 0 20px 0; line-height: 1.2;
+  }
+  .slide-cover .slide-subtitle {
+    font-size: 22px; color: #94A3B8; font-weight: 300;
+    margin: 0 0 40px 0; line-height: 1.6;
+  }
+  .slide-cover .slide-meta {
+    font-size: 14px; color: #64748B;
+    border-top: 1px solid #1E293B; padding-top: 20px;
+  }
+
+  /* ── 浅色内容页 ── */
+  .slide-content {
+    background: #F4F6F9;
+    color: #1A1A2E;
+  }
+  .slide-content .slide-inner {
+    display: flex; flex-direction: column;
+    height: 100%; padding: 50px 70px;
+  }
+  .slide-content .slide-title {
+    font-size: 36px; font-weight: 700; color: #0066CC;
+    margin: 0 0 24px 0; padding-bottom: 14px;
+    border-bottom: 3px solid #0066CC;
+    line-height: 1.3;
+  }
+  .slide-content .slide-title.accent-green {
+    color: #00A86B; border-bottom-color: #00A86B;
+  }
+  .slide-content .slide-title.accent-amber {
+    color: #D97706; border-bottom-color: #D97706;
+  }
+
+  /* ── 标题靠右布局 ── */
+  .slide-content.layout-right .slide-inner {
+    flex-direction: row; align-items: flex-start; gap: 30px;
+  }
+  .slide-content.layout-right .slide-title {
+    flex: 0 0 30%; border-bottom: none; padding-right: 20px;
+    border-right: 3px solid #0066CC; margin-bottom: 0;
+    font-size: 28px;
+  }
+  .slide-content.layout-right .slide-body {
+    flex: 1;
+  }
+
+  /* ── 正文排版 ── */
+  .slide-body { font-size: 24px; line-height: 1.75; color: #1A1A2E; }
+  .slide-body ul { list-style: none; padding: 0; margin: 6px 0; }
+  .slide-body li { position: relative; padding: 6px 0 6px 28px; }
+  .slide-body li::before {
+    content: ""; position: absolute; left: 0; top: 16px;
+    width: 8px; height: 8px; border-radius: 2px;
+    background: #0066CC;
+  }
+  .slide-body p { margin: 8px 0; padding: 0; }
+  .slide-body strong { color: #0066CC; font-weight: 600; }
+  .slide-body .highlight-green strong { color: #00A86B; }
+
+  /* ── 总结页 ── */
+  .slide-summary .slide-title {
+    font-size: 48px; font-weight: 700; color: #FFFFFF;
+    margin: 0 0 30px 0; line-height: 1.2;
+  }
+  .slide-summary .slide-body {
+    font-size: 26px; line-height: 1.8; color: #CBD5E1;
+  }
+  .slide-summary li::before { background: #00A86B; }
+
+  /* ── 下载按钮 ── */
+  .download-btn {
+    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+    background: #0066CC; color: #FFFFFF; border: none;
+    padding: 10px 20px; border-radius: 6px; font-size: 13px;
+    cursor: pointer; font-weight: 600; text-decoration: none;
+    display: flex; align-items: center; gap: 6px;
+    opacity: 0.85; transition: opacity .2s;
+  }
+  .download-btn:hover { opacity: 1; }
+
+  /* ── 页号 ── */
+  .slide-number {
+    position: absolute; bottom: 18px; right: 70px;
+    font-size: 13px; color: #94A3B8; font-weight: 300;
+    letter-spacing: 1px;
+  }
+  .slide-content .slide-number { color: #9CA3AF; }
+</style>
+</head>
+<body>
+<div class="reveal">
+  <div class="slides">
+    <section class="slide-cover">
+      <div class="slide-inner">
+        <h1 class="slide-title">机器人关节模组一次讲透</h1>
+        <div class="slide-subtitle">从机电系统视角，拆解机器人关节的构成与设计逻辑&lt;br&gt;&lt;br&gt;电机 · 减速器 · 驱动器 · 编码器 · 抱闸</div>
+        <div class="slide-meta">5 页 · 202606160650</div>
+      </div>
+      <div class="slide-number">01 / 7</div>
+    </section>
+    <section class="slide-content">
+      <div class="slide-inner">
+        <h2 class="slide-title">机器人关节模组一次讲透</h2>
+        <div class="slide-body">
+          <p>从机电系统视角，拆解机器人关节的构成与设计逻辑</p>
+<p>电机 · 减速器 · 驱动器 · 编码器 · 抱闸</p>
+        </div>
+        <aside class="notes">开场：机器人关节远不止一个电机，它是一整套高度集成的机电系统。标题页奠定全篇的系统工程视角。</aside>
+      </div>
+      <div class="slide-number">02 / 7</div>
+    </section>
+    <section class="slide-content layout-right">
+      <div class="slide-inner">
+        <h2 class="slide-title accent-green">关节的核心构成</h2>
+        <div class="slide-body">
+          <ul>
+<li><strong>电机</strong>：电能→机械能，提供原始动力</li>
+<li><strong>减速器</strong>：降速增矩，提升控制分辨率</li>
+<li><strong>驱动器</strong>：控制算法→电信号，执行闭环控制</li>
+<li><strong>编码器</strong>：位置反馈，使系统不再「盲转」</li>
+<li><strong>抱闸</strong>：断电保持，安全制动</li>
+</ul>
+        </div>
+        <aside class="notes">五大核心部件的简要总览，帮助听众建立整体框架。</aside>
+      </div>
+      <div class="slide-number">03 / 7</div>
+    </section>
+    <section class="slide-content">
+      <div class="slide-inner">
+        <h2 class="slide-title accent-amber">电机 + 减速器：动力心脏</h2>
+        <div class="slide-body">
+          <ul>
+<li>电机天然<strong>高速小力矩</strong>，关节需要<strong>低速大力矩</strong></li>
+<li>减速器是关节的<strong>灵魂</strong>：</li>
+<li>谐波减速器：高精度、紧凑，适用于上肢</li>
+<li>RV减速器：高刚度、耐冲击，适用于下肢</li>
+<li>行星减速器：准直驱路线，正反向效率高</li>
+<li>核心矛盾：<strong>输出能力 vs 控制性能</strong>的平衡</li>
+</ul>
+        </div>
+        <aside class="notes">强调减速器不是纯粹的放大器，它引入摩擦、背隙和弹性，使控制复杂化。</aside>
+      </div>
+      <div class="slide-number">04 / 7</div>
+    </section>
+    <section class="slide-content layout-right">
+      <div class="slide-inner">
+        <h2 class="slide-title">驱动器 + 编码器：精准闭环</h2>
+        <div class="slide-body">
+          <ul>
+<li><strong>驱动器</strong>：连接算法与硬件的桥梁</li>
+<li>功率驱动 · 闭环控制（电流/速度/位置环）</li>
+<li>过流/过温保护 · 故障检测</li>
+<li><strong>编码器</strong>：双编码器配置</li>
+<li>电机端编码器：高频伺服控制</li>
+<li>输出端编码器：补偿减速器弹性变形</li>
+</ul>
+        </div>
+        <aside class="notes">高性能关节通常需要双编码器配置，因为减速器并非理想刚体，输出侧信息对高精度控制至关重要。</aside>
+      </div>
+      <div class="slide-number">05 / 7</div>
+    </section>
+    <section class="slide-content">
+      <div class="slide-inner">
+        <h2 class="slide-title accent-green">三大技术路线与趋势</h2>
+        <div class="slide-body">
+          <p><strong>三条路线，比减速器的角色差异</strong></p>
+<ul>
+<li><strong>刚性关节</strong>：谐波减速器，精度优先</li>
+<li><strong>弹性关节</strong>：谐波+弹性元件，精度与安全折中</li>
+<li><strong>准直驱关节</strong>：低减速比行星+高性能电机，力控优先</li>
+</ul>
+<p><strong>未来趋势</strong></p>
+<ul>
+<li>减速器从「核心放大器」→「系统的一部分」</li>
+<li>关节向<strong>智能节点</strong>演进：局部控制 · 自诊断 · 安全保护</li>
+<li>行业从<strong>定制化</strong>走向<strong>标准化</strong>，成本加速下降</li>
+</ul>
+        </div>
+        <aside class="notes">三条路线无绝对优劣，取决于应用场景。准直驱路线挑战在于转矩密度和散热。标准化是产业化关键变量。</aside>
+      </div>
+      <div class="slide-number">06 / 7</div>
+    </section>
+    <section class="slide-summary">
+      <div class="slide-inner">
+        <h2 class="slide-title">谢谢</h2>
+        <div class="slide-body">
+          <p><strong>机器人关节模组一次讲透</strong></p>
+          <p style="font-size:20px;color:#64748B;margin-top:30px;">5 页 · 202606160650</p>
+        </div>
+      </div>
+      <div class="slide-number">07 / 7</div>
+    </section>
+  </div>
+</div>
+<a class="download-btn" href="./slides.pptx" download>⬇ PPTX</a>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+<script>
+Reveal.initialize({
+  hash: true,
+  transition: 'slide',
+  width: 1280,
+  height: 720,
+  margin: 0,
+  plugins: [RevealNotes]
+});
+</script>
+</body>
+</html>
